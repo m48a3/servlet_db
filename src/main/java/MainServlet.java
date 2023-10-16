@@ -23,7 +23,6 @@ import com.google.gson.JsonParser;
 @WebServlet("/weather")
 public class MainServlet extends HttpServlet {
 
-    private static final String servletApiKey = "ea60a55e-9bf3-485c-ad40-692d82f5b8ac";
     private WeatherHistory weatherHistory;
 
     @Override
@@ -46,9 +45,10 @@ public class MainServlet extends HttpServlet {
 
         resp.getWriter().write("<form method='POST' action='/unnamed/weather'>");
         resp.getWriter().write("Введите ID города: <input type='text' name='cityId'>");
-        resp.getWriter().write("<input type='submit' value='Добавить'>");
+        resp.getWriter().write("<input type='submit' value='Получить погоду'>");
         resp.getWriter().write("</form>");
 
+        // Отобразить таблицу с данными из базы данных (историю поиска)
         displayWeatherData(resp);
     }
 
@@ -56,11 +56,12 @@ public class MainServlet extends HttpServlet {
         List<WeatherRecord> records = weatherHistory.getAllWeatherData();
 
         resp.getWriter().write("<table>");
-        resp.getWriter().write("<tr><th>ID</th><th>Город</th><th>Температура</th><th>Дата</th></tr>");
+        resp.getWriter().write("<tr><th>ID</th><th>Город</th><th>ID Города</th><th>Температура</th><th>Время</th></tr>");
         for (WeatherRecord record : records) {
             resp.getWriter().write("<tr>");
             resp.getWriter().write("<td>" + record.getId() + "</td>");
             resp.getWriter().write("<td>" + record.getCity() + "</td>");
+            resp.getWriter().write("<td>" + record.getCityIdentificator() + "</td>");
             resp.getWriter().write("<td>" + record.getTemperature() + "</td>");
             resp.getWriter().write("<td>" + record.getRequestDate() + "</td>");
             resp.getWriter().write("</tr>");
@@ -68,18 +69,25 @@ public class MainServlet extends HttpServlet {
         resp.getWriter().write("</table>");
     }
 
+
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String cityId = req.getParameter("cityId");
         if (cityId != null && !cityId.isEmpty()) {
-            fetchAndInsertWeatherData(cityId);
+            // Получите данные о погоде для указанного ID города
+            String temperature = fetchWeatherForCity(cityId);
+
+            // Вставьте данные в базу данных
+            if (temperature != null) {
+                weatherHistory.insertWeatherData(cityId, Float.parseFloat(temperature));
+            }
         }
         resp.sendRedirect("/unnamed/weather");
     }
 
-    private void fetchAndInsertWeatherData(String cityId) {
+    private String fetchWeatherForCity(String cityId) {
         OkHttpClient client = new OkHttpClient();
-        String fetchApiKey = "ea60a55e-9bf3-485c-ad40-692d82f5b8ac";
+        String fetchApiKey = "ea60a55e-9bf3-485c-ad40-692d82f5b8ac"; // Замените на свой ключ
 
         try {
             String weatherUrl = "https://api.weather.yandex.ru/v2/forecast?geoid=" + cityId + "&lang=ru_RU&limit=1&hours=true&extra=false";
@@ -98,10 +106,11 @@ public class MainServlet extends HttpServlet {
                         .get("temp")
                         .getAsString();
 
-                weatherHistory.insertWeatherData(cityId, Float.parseFloat(temperature));
+                return temperature;
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return null;
     }
 }

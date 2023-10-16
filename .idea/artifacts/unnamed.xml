@@ -14,8 +14,11 @@
           <element id="library" level="project" name="Maven: org.jetbrains.kotlin:kotlin-stdlib:1.4.10" />
           <element id="library" level="project" name="Maven: org.jetbrains:annotations:13.0" />
           <element id="library" level="project" name="Maven: com.squareup.okhttp3:okhttp:4.9.1" />
+          <element id="library" level="project" name="Maven: org.checkerframework:checker-qual:3.31.0" />
+          <element id="library" level="project" name="Maven: org.postgresql:postgresql:42.6.0" />
         </element>
       </element>
+      <element id="javaee-facet-resources" facet="servlet_db/web/Web" />
     </root>
   </artifact>
 </component>

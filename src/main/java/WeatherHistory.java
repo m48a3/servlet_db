@@ -17,14 +17,13 @@ public class WeatherHistory {
     private static final String DATABASE_USER = "postgres";
     private static final String DATABASE_PASSWORD = "080900";
 
-    public void insertWeatherData(String city, float temperature) {
+    public void insertWeatherData(String cityid, float temperature) {
         try {
-            Connection connection = DriverManager.getConnection(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD);
-            String insertQuery = "INSERT INTO weather_history (city, temperature, request_date) VALUES (?, ?, ?)";
+            Connection connection = dataSource.getConnection(); // Используйте dataSource
+            String insertQuery = "INSERT INTO weather_history (cityid, temperature) VALUES (?, ?)";
             PreparedStatement preparedStatement = connection.prepareStatement(insertQuery);
-            preparedStatement.setString(1, city);
+            preparedStatement.setString(1, cityid);
             preparedStatement.setFloat(2, temperature);
-            preparedStatement.setTimestamp(3, new Timestamp(System.currentTimeMillis()));
             preparedStatement.executeUpdate();
             preparedStatement.close();
             connection.close();
@@ -37,17 +36,18 @@ public class WeatherHistory {
         List<WeatherRecord> records = new ArrayList<>();
         try {
             Connection connection = DriverManager.getConnection(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD);
-            String selectQuery = "SELECT id, city, temperature, request_date FROM weather_history";
+            String selectQuery = "SELECT id, city,cityid, temperature, request_date FROM weather_history";
             PreparedStatement preparedStatement = connection.prepareStatement(selectQuery);
             ResultSet resultSet = preparedStatement.executeQuery();
 
             while (resultSet.next()) {
                 int id = resultSet.getInt("id");
                 String city = resultSet.getString("city");
+                String CityIdentificator = resultSet.getString("cityid");
                 float temperature = resultSet.getFloat("temperature");
                 Timestamp requestDate = resultSet.getTimestamp("request_date");
 
-                WeatherRecord record = new WeatherRecord(id, city, temperature, requestDate);
+                WeatherRecord record = new WeatherRecord(id, city, CityIdentificator, temperature, requestDate);
                 records.add(record);
             }
 
