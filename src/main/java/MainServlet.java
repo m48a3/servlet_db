@@ -20,11 +20,18 @@ import okhttp3.ResponseBody;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+/**
+ * Сервлет для получения информации о погоде и отображения данных веб-страницы.
+ */
 @WebServlet("/weather")
 public class MainServlet extends HttpServlet {
 
     private WeatherHistory weatherHistory;
 
+    /**
+     * Инициализация сервлета. Создает экземпляр `WeatherHistory` для работы с базой данных.
+     * @throws ServletException Исключение, которое может возникнуть при инициализации сервлета.
+     */
     @Override
     public void init() throws ServletException {
         super.init();
@@ -38,6 +45,13 @@ public class MainServlet extends HttpServlet {
         }
     }
 
+    /**
+     * Обрабатывает GET-запросы, отображает форму для ввода ID города и таблицу с данными о погоде.
+     * @param req HTTP-запрос.
+     * @param resp HTTP-ответ.
+     * @throws ServletException Исключение, которое может возникнуть при обработке запроса.
+     * @throws IOException Исключение, которое может возникнуть при обработке запроса.
+     */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("text/html; charset=UTF-8");
@@ -48,10 +62,14 @@ public class MainServlet extends HttpServlet {
         resp.getWriter().write("<input type='submit' value='Получить погоду'>");
         resp.getWriter().write("</form>");
 
-        // Отобразить таблицу с данными из базы данных (историю поиска)
         displayWeatherData(resp);
     }
 
+    /**
+     * Отображает таблицу с данными о погоде.
+     * @param resp HTTP-ответ.
+     * @throws IOException Исключение, которое может возникнуть при выводе данных.
+     */
     private void displayWeatherData(HttpServletResponse resp) throws IOException {
         List<WeatherRecord> records = weatherHistory.getAllWeatherData();
 
@@ -69,22 +87,33 @@ public class MainServlet extends HttpServlet {
         resp.getWriter().write("</table>");
     }
 
-
+    /**
+     * Обрабатывает POST-запросы, получает данные о погоде и вставляет их в базу данных.
+     * @param req HTTP-запрос.
+     * @param resp HTTP-ответ.
+     * @throws ServletException Исключение, которое может возникнуть при обработке запроса.
+     * @throws IOException Исключение, которое может возникнуть при обработке запроса.
+     */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String city = "Нет информации";
         String cityId = req.getParameter("cityId");
         if (cityId != null && !cityId.isEmpty()) {
-            // Получите данные о погоде для указанного ID города
+
             String temperature = fetchWeatherForCity(cityId);
 
-            // Вставьте данные в базу данных
             if (temperature != null) {
-                weatherHistory.insertWeatherData(cityId, Float.parseFloat(temperature));
+                weatherHistory.insertWeatherData(city,cityId, Float.parseFloat(temperature));
             }
         }
         resp.sendRedirect("/unnamed/weather");
     }
 
+    /**
+     * Получает данные о погоде для указанного ID города, используя API Яндекс.Погоды.
+     * @param cityId ID города.
+     * @return Температура в виде строки или null в случае ошибки.
+     */
     private String fetchWeatherForCity(String cityId) {
         OkHttpClient client = new OkHttpClient();
         String fetchApiKey = "ea60a55e-9bf3-485c-ad40-692d82f5b8ac"; // Замените на свой ключ
